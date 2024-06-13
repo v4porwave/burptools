@@ -15,5 +15,10 @@
 ![img.png](img/填充数据.png)
 4. 在response中右键鼠标，选择 Extensions -> Domain Parser -> domain parser
 ![img.png](img/解析.png)
-5. 解析成功，可以愉快的到处 ctrl + v 喽。 !<^.^>!
+5. 解析成功，可以愉快的到处 ctrl v 喽 ~ !<^.^>!
 ![img.png](img/结果.png)
+
+# 后续待办
+1. proxy模块中自动识别并标记ICP/IP查询请求包
+2. 合并数据填充、手动发包和域名解析
+3. ...
