@@ -4,7 +4,10 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 
 import javax.swing.*;
-import java.io.UnsupportedEncodingException;
+import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,20 +15,20 @@ import java.util.List;
 
 public class BurpExtender implements IBurpExtender,IContextMenuFactory {
 
-    private final String EXTENSION_NAME = "Domain Parser";
-
     private IBurpExtenderCallbacks callbacks;
 
+    //==================================IBurpExtender=======================================
     @Override
     public void registerExtenderCallbacks(IBurpExtenderCallbacks callbacks) {
         this.callbacks = callbacks;
 
-        callbacks.setExtensionName(EXTENSION_NAME);
+        callbacks.setExtensionName("Domain Parser");
         callbacks.registerContextMenuFactory(this);
 
         callbacks.printOutput("Success to extension load!");
     }
 
+    //================================IContextMenuFactory===================================
     @Override
     public List<JMenuItem> createMenuItems(IContextMenuInvocation invocation) {
         List<JMenuItem> menuItems = new ArrayList<>();
@@ -36,11 +39,11 @@ public class BurpExtender implements IBurpExtender,IContextMenuFactory {
             String res ;
             String resp = "";
             try {
-                res = new String(request, "UTF-8");
+                res = new String(request, StandardCharsets.UTF_8);
                 if (response != null && response.length > 0) {
-                    resp = new String(response, "UTF-8");
+                    resp = new String(response, StandardCharsets.UTF_8);
                 }
-            } catch (UnsupportedEncodingException e) {
+            } catch (Exception e) {
                 res = new String(request);
                 if (response != null && response.length > 0) {
                     resp = new String(response);
@@ -48,8 +51,8 @@ public class BurpExtender implements IBurpExtender,IContextMenuFactory {
             }
             String[] resLines = res.split("\r\n");
             for (String resLine : resLines) {
-                if (resLine.startsWith("Host") && resLine.indexOf("hlwicpfwc.miit.gov.cn") > -1) {
-                    if (resp.length() > 0) {
+                if (resLine.startsWith("Host") && resLine.contains("hlwicpfwc.miit.gov.cn")) {
+                    if (!resp.isEmpty()) {
                         menuItems.add(createParserMenu(resp.split("\r\n"), selectedMessage));
                     }
                     menuItems.add(createDataMenu(res.split("\r\n"), selectedMessage));
@@ -84,7 +87,6 @@ public class BurpExtender implements IBurpExtender,IContextMenuFactory {
         int length = respLines.length;
         String jsonStr = respLines[length - 1];
         JSONObject resp = JSONObject.parse(jsonStr);
-
         //解析json工具
         JMenuItem item = new JMenuItem("domain parser");
         item.setEnabled(true);
@@ -104,10 +106,11 @@ public class BurpExtender implements IBurpExtender,IContextMenuFactory {
                 }
             }
             if (sb.length() > 0) {
-                List<String> headers = Arrays.asList(Arrays.copyOf(respLines, length - 2));
-                IExtensionHelpers helpers = callbacks.getHelpers();
-                byte[] response = helpers.buildHttpMessage(headers, sb.toString().getBytes(StandardCharsets.UTF_8));
-                selectedMessage.setRequest(response);
+                JOptionPane.showMessageDialog(null, "已复制到粘贴板","域名解析结果",
+                        JOptionPane.INFORMATION_MESSAGE);
+                Clipboard systemClipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                Transferable transferable = new StringSelection(sb.toString());
+                systemClipboard.setContents(transferable, null);
             }
         });
         return item;
