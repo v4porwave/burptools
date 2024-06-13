@@ -2,13 +2,13 @@
 
 [域名解析](domain/README.md)
 
-# 团队和个人
-
+# 团队
 
 👇👇👇 **OneTS安全团队** 👇👇👇
 
 ![img.png](img/group.png)
 
+# 个人
 
 👇👇👇 **个人学习记录** 👇👇👇
 ![个人](img/person.jpg)
