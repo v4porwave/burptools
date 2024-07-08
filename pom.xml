@@ -10,6 +10,7 @@
   <version>1.0</version>
   <modules>
     <module>domain</module>
+    <module>autodir</module>
   </modules>
 
   <name>burp-tools</name>
