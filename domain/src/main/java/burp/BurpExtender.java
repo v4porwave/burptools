@@ -9,13 +9,28 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.*;
 import java.util.List;
+import java.util.regex.Pattern;
 
-public class BurpExtender implements IBurpExtender,IContextMenuFactory {
+/**
+ * TODO1: 增加被动式扫描
+ * TODO2: 优化结果显示方式(可以放在logger中)
+ * TODO3: 可以增加颜色标记(考虑再logger中)
+ */
+public class BurpExtender implements IBurpExtender,IContextMenuFactory,IProxyListener {
 
     private IBurpExtenderCallbacks callbacks;
+
+    private String[] websites = new String[]{
+            "sou\\.xiaolanben\\.com",
+            "hlwicpfwc\\.miit\\.gov\\.cn"
+    };
+
+    private String[] uris = new String[]{
+            "/api\\.xiaolanben\\.com/xlb-gateway/blue-book/group/groupData",
+            ""
+    };
 
     //==================================IBurpExtender=======================================
     @Override
@@ -24,6 +39,7 @@ public class BurpExtender implements IBurpExtender,IContextMenuFactory {
 
         callbacks.setExtensionName("Domain Parser");
         callbacks.registerContextMenuFactory(this);
+        callbacks.registerProxyListener(this);
 
         callbacks.printOutput("Success to extension load!");
     }
@@ -73,7 +89,6 @@ public class BurpExtender implements IBurpExtender,IContextMenuFactory {
             if (dataObject.containsKey("pageNum") && dataObject.containsKey("pageSize")) {
                 dataObject.replace("pageNum", 1);
                 dataObject.replace("pageSize", 300);
-
                 List<String> headers = Arrays.asList(Arrays.copyOf(resLines, length - 2));
                 IExtensionHelpers helpers = callbacks.getHelpers();
                 byte[] request = helpers.buildHttpMessage(headers, dataObject.toJSONString().getBytes(StandardCharsets.UTF_8));
@@ -96,11 +111,14 @@ public class BurpExtender implements IBurpExtender,IContextMenuFactory {
                 JSONObject params = resp.getJSONObject("params");
                 if (params.containsKey("list")) {
                     JSONArray list = params.getJSONArray("list");
+                    callbacks.printOutput("icp domain parser >>>");
                     for (Object obj : list) {
                         JSONObject jsonObject = (JSONObject) obj;
                         if (jsonObject.containsKey("domain")) {
-                            sb.append(jsonObject.getString("domain"));
+                            String domain = jsonObject.getString("domain");
+                            sb.append(domain);
                             sb.append("\n");
+                            callbacks.printOutput(domain);
                         }
                     }
                 }
@@ -114,5 +132,49 @@ public class BurpExtender implements IBurpExtender,IContextMenuFactory {
             }
         });
         return item;
+    }
+
+    //================================IProxyListener===================================
+    @Override
+    public void processProxyMessage(boolean messageIsRequest, IInterceptedProxyMessage message) {
+        if (!messageIsRequest) {
+            byte[] requestByte = message.getMessageInfo().getRequest();
+            byte[] responseByte = message.getMessageInfo().getResponse();
+            IRequestInfo iRequestInfo = callbacks.getHelpers().analyzeRequest(requestByte);
+            IResponseInfo iResponseInfo = callbacks.getHelpers().analyzeResponse(responseByte);
+            List<String> headers = iRequestInfo.getHeaders();
+            if (iResponseInfo.getStatusCode() == 200 ) {
+                for (int i = 0;i < websites.length; i++) {
+                    Pattern hostPattern = Pattern.compile("^Host:\\s(" + websites[i] + ")$");
+                    if (hostPattern.matcher(headers.get(1)).find()) {
+                        Pattern uriPattern = Pattern.compile("^GET\\s(" + uris[i] + ")");
+                        if (uriPattern.matcher(headers.get(0)).find()) {
+                            parserBody(new String(responseByte).substring(iResponseInfo.getBodyOffset()), i);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void parserBody(String body, int offset) {
+        switch (offset) {
+            case 0: parserXLBBody(body); break;
+            case 1: parserICPBody(body); break;
+            default: callbacks.printError("Unknown website.");
+        }
+    }
+
+    private void parserXLBBody(String body) {
+        JSONArray array = JSONArray.parse(body);
+        callbacks.printOutput("xlb domain parser >>>");
+        for (int i = 0;i < array.size();i ++) {
+            JSONObject o = (JSONObject) array.get(i);
+            callbacks.printOutput(o.getString("domain"));
+        }
+    }
+
+    private void parserICPBody(String body) {
     }
 }
