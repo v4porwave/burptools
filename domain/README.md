@@ -7,18 +7,11 @@
 为简化备案域名查询，请立即使用domain插件!!!
 
 # 使用方法
-1. burp导入插件
-![img.png](img/导入.png)
-2. [ICP/IP官网](https://beian.miit.gov.cn/#/Integrated/index)查询目标，并使用burp抓包
-![img.png](img/抓包.png)
-3. 转发到repeater模块，在request中右键鼠标，选择 Extensions -> Domain Parser -> fill data，然后重放请求
-![img.png](img/填充数据.png)
-4. 在response中右键鼠标，选择 Extensions -> Domain Parser -> domain parser
-![img.png](img/解析.png)
-5. 解析成功，可以愉快的到处 ctrl v 喽 ~ !<^.^>!
-![img.png](img/结果.png)
-
-# 后续待办
-1. proxy模块中自动识别并标记ICP/IP查询请求包
-2. 合并数据填充、手动发包和域名解析
-3. ...
+1. 加载插件
+![success.png](img/success.png)
+2. 在[ICP/IP官网](https://beian.miit.gov.cn/#/Integrated/index)正常查询即可
+![success.png](img/icp.png)
+3. 查询结果:
+   1. 自动复制到粘贴板, 可以直接粘贴
+   2. 在burp的extensions -> domain parser -> output中可以看到
+      ![result.png](img/result.png)
