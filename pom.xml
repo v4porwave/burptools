@@ -9,8 +9,8 @@
   <packaging>pom</packaging>
   <version>2.0</version>
   <modules>
-    <module>domain</module>
-      <module>autodir</module>
+    <module>autodir</module>
+    <module>smartproxy</module>
   </modules>
 
   <name>burp-tools</name>
