@@ -1,6 +1,7 @@
 package burp;
 
 import burp.config.Website;
+import burp.ui.SmartPanel;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 
@@ -27,6 +28,18 @@ public class BurpExtender implements IBurpExtender,IProxyListener {
         this.callbacks = callbacks;
         callbacks.setExtensionName("Smart Proxy v1.0");
         callbacks.registerProxyListener(this);
+
+        callbacks.addSuiteTab(new ITab() {
+            @Override
+            public String getTabCaption() {
+                return "Smart Proxy";
+            }
+
+            @Override
+            public Component getUiComponent() {
+                return new SmartPanel();
+            }
+        });
         callbacks.printOutput("Success to extension load!");
         callbacks.printOutput("You will get more smart proxy when test or collect asset.");
     }

@@ -2,11 +2,10 @@ package burp.ui;
 
 import javax.swing.*;
 import java.awt.*;
-import java.net.URL;
 
 public class SmartPanel extends JPanel {
     public SmartPanel() {
-
+        initComponents();
     }
 
     private void initComponents() {
@@ -16,16 +15,13 @@ public class SmartPanel extends JPanel {
         ((GridBagLayout) getLayout()).columnWeights = new double[]{1.0, 1.0E-4};
         ((GridBagLayout) getLayout()).rowWeights = new double[]{1.0, 1.0E-4};
 
-        JTabbedPane mainTabbedPane = new JTabbedPane();
-
         JTabbedPane pane = new JTabbedPane();
-        pane.addTab(" Highlighter and Extractor - Empower ethical hacker for efficient operations. ", null);
-        pane.setEnabledAt(1, false);
+        pane.addTab("Configuration", new ConfigPanel());
+        pane.addTab("Interceptor", new InterceptorList());
+        pane.setEnabledAt(0, true);
 
         add(pane, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
                 GridBagConstraints.CENTER, GridBagConstraints.BOTH,
                 new Insets(0, 0, 0, 0), 0, 0));
-
     }
-
 }
