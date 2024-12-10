@@ -1,9 +1,11 @@
 package burp;
 
+import burp.config.Settings;
 import burp.config.Website;
 import burp.ui.SmartPanel;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
+import jdk.nashorn.internal.scripts.JO;
 
 import javax.swing.*;
 import java.awt.*;
@@ -95,16 +97,15 @@ public class BurpExtender implements IBurpExtender,IProxyListener {
         String unitName = parse.getString("unitName");
 
         executorService.execute(() -> {
-            int i = JOptionPane.showConfirmDialog(null, "是否解析ICP/IP(" + unitName + ") 查询结果", "ICP/IP确认", JOptionPane.YES_NO_OPTION);
-            if (i == 0) {
+            if (Settings.ICP_BUTTON) {
+                JOptionPane.showMessageDialog(null, "是否解析ICP/IP(" + unitName + ") 查询结果", "ICP/IP确认", JOptionPane.INFORMATION_MESSAGE);
                 callbacks.printOutput(">>>>>>>>>> icp domain parser [" + unitName + "] >>>>>>>>>>");
                 byte[] bytes = callbacks.getHelpers().buildHttpMessage(headers, parse.toJSONString().getBytes(StandardCharsets.UTF_8));
                 IHttpService service = callbacks.getHelpers().buildHttpService(Website.ICP.host().replace("\\", ""), 443, "https");
                 IHttpRequestResponse iHttpRequestResponse = callbacks.makeHttpRequest(service, bytes);
                 byte[] responseByte = iHttpRequestResponse.getResponse();
                 IResponseInfo iResponseInfo = callbacks.getHelpers().analyzeResponse(responseByte);
-                parseResponse(
-                        JSONObject.parse(new String(Arrays.copyOfRange(responseByte, iResponseInfo.getBodyOffset(), responseByte.length), StandardCharsets.UTF_8)),
+                parseResponse(JSONObject.parse(new String(Arrays.copyOfRange(responseByte, iResponseInfo.getBodyOffset(), responseByte.length), StandardCharsets.UTF_8)),
                         unitName
                 );
             }
