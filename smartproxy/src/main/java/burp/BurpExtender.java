@@ -12,9 +12,12 @@ import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
+import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -61,13 +64,18 @@ public class BurpExtender implements IBurpExtender,IProxyListener {
                 Website website = matchRequest(iRequestInfo.getHeaders());
                 if (website != null) {
                     switch (website) {
-                        case XLB: parserXLBBody(new String(responseByte).substring(iResponseInfo.getBodyOffset())); break;
+                        case AQC: parserAQCBody(new String(responseByte).substring(iResponseInfo.getBodyOffset())); break;
                         case ICP: parserICPRequest(iRequestInfo.getHeaders(), body); break;
                         default: break;
                     }
                 }
             }
         }
+    }
+
+    public static void main(String[] args) throws Exception {
+        new ProcessBuilder().command("/bin/sh", "-c", "echo hello").start().getOutputStream();
+        new ProcessBuilder().command();
     }
 
     private Website matchRequest(List<String> headers) {
@@ -81,13 +89,21 @@ public class BurpExtender implements IBurpExtender,IProxyListener {
         return null;
     }
 
-    private void parserXLBBody(String body) {
-        JSONArray array = JSONArray.parse(body);
-        callbacks.printOutput("xlb domain parser >>>");
-        for (int i = 0;i < array.size();i ++) {
-            JSONObject o = (JSONObject) array.get(i);
-            callbacks.printOutput(o.getString("domain"));
-        }
+    private void parserAQCBody(String body) {
+        JSONObject o = JSONObject.parse(body).getJSONObject("data");
+        JSONObject investRecordData = o.getJSONObject("investRecordData");
+        String unitName = o.getString("entName");
+        int total = investRecordData.getInteger("total");
+        callbacks.printOutput(">>>>>>>>>> icp domain parser [" + unitName + " : " + total + "] >>>>>>>>>>");
+        executorService.execute(() -> {
+            if (Settings.AQC_BUTTON) {
+                Map<String, String> subs = new HashMap<>();
+                for (Object list : investRecordData.getJSONArray("list")) {
+                    JSONObject sub = (JSONObject) list;
+                    callbacks.printOutput(sub.getString("entName") + " : " + sub.getString("regRate"));
+                }
+            }
+        });
     }
 
     private void parserICPRequest(List<String> headers, String body) {
@@ -97,8 +113,13 @@ public class BurpExtender implements IBurpExtender,IProxyListener {
         String unitName = parse.getString("unitName");
 
         executorService.execute(() -> {
+            for (String header : headers) {
+                if (header.startsWith("Token")) {
+                    Settings.ICP_COOKIE = header.substring(7);
+                }
+            }
+
             if (Settings.ICP_BUTTON) {
-                JOptionPane.showMessageDialog(null, "是否解析ICP/IP(" + unitName + ") 查询结果", "ICP/IP确认", JOptionPane.INFORMATION_MESSAGE);
                 callbacks.printOutput(">>>>>>>>>> icp domain parser [" + unitName + "] >>>>>>>>>>");
                 byte[] bytes = callbacks.getHelpers().buildHttpMessage(headers, parse.toJSONString().getBytes(StandardCharsets.UTF_8));
                 IHttpService service = callbacks.getHelpers().buildHttpService(Website.ICP.host().replace("\\", ""), 443, "https");

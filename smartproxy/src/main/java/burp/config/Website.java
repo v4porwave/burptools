@@ -6,7 +6,7 @@ public enum Website {
 
     ICP("/icpproject_query/api/icpAbbreviateInfo/queryByCondition", "hlwicpfwc\\.miit\\.gov\\.cn"),
 
-    XLB("/api\\.xiaolanben\\.com/xlb-gateway/blue-book/group/groupData","sou\\.xiaolanben\\.com");
+    AQC("/stockchart/stockchartAjax","aiqicha\\.baidu\\.com");
 
     private String uri;
     private String host;

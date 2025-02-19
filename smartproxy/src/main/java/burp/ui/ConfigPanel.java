@@ -11,17 +11,17 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Set;
 
-public class ConfigPanel extends JFrame {
+public class ConfigPanel extends JPanel {
 
     public ConfigPanel() {
         reloadButton = new JButton();
-        changeStatus();
+        changeICPStatus();
         initComponents();
     }
 
     private JButton reloadButton ;
 
-    private void changeStatus() {
+    private void changeICPStatus() {
         reloadButton.setText(Settings.ICP_BUTTON ? "开启" : "关闭");
     }
 
@@ -40,14 +40,11 @@ public class ConfigPanel extends JFrame {
 
         buildTopPanel();
         buildBottomPanel();
-
-//        ruleInfoPanel.add(ruleLabel);
-//        ruleInfoPanel.add(reloadButton);
     }
 
     private void buildTopPanel() {
         GridBagLayout gridBagLayout = new GridBagLayout();
-        gridBagLayout.rowHeights = new int[]{0, 0, 0};
+        gridBagLayout.rowHeights = new int[]{0, 0, 0, 0, 0, 0, 0};
         gridBagLayout.columnWeights = new double[]{0.3, 0.7};  //设置了列的宽度为容器宽度
         gridBagLayout.rowWeights = new double[]{0.4, 0.2, 0.4};  //第一行的高度占了容器的2份，第二行的高度占了容器的8份
         JPanel topPanel = new JPanel(gridBagLayout);
@@ -58,7 +55,7 @@ public class ConfigPanel extends JFrame {
         topPanel.add(ruleLabel);
         reloadButton.addActionListener((e) -> {
             Settings.ICP_BUTTON = !Settings.ICP_BUTTON;
-            changeStatus();
+            changeICPStatus();
         });
         topPanel.add(reloadButton);
 
